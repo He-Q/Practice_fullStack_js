@@ -1,4 +1,5 @@
 const User = require('../models/User')
+const Post = require('../models/Post')
 
 exports.ifUserExists = function(req,res,next){
     User.findByUsername(req.params.username).then((userDocument)=>{
@@ -10,10 +11,17 @@ exports.ifUserExists = function(req,res,next){
 }
 
 exports.profilePostsScreen = function(req,res){
-    res.render('profile',{
-        profileUsername:req.profileUser.username,
-        profileAvatar:req.profileUser.avatar
+    Post.findByAuthorId(req.profileUser._id).then((posts)=>{
+        res.render('profile',{
+            posts:posts,
+            profileUsername:req.profileUser.username,
+            profileAvatar:req.profileUser.avatar
+        })
+    }).catch(()=>{
+        res.render('404')
     })
+        
+   
 }
 
 exports.mustBeLoggedIn = function(req,res,next){
