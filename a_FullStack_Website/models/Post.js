@@ -1,10 +1,8 @@
-const { ObjectId } = require('mongodb')
-const { on } = require('../db')
-const { post } = require('../router')
 const User = require('./User')
-
 const postsCollection = require('../db').db().collection('posts')
-const ObjectID =  require('mongodb').ObjectID
+const ObjectId =  require('mongodb').ObjectID
+const sanitizeHTML = require('sanitize-html')
+const e = require('express')
 let Post = function(data,userid,requestedPostId){
     this.data = data
     this.errors = []
@@ -21,10 +19,10 @@ Post.prototype.cleanUp = function(){
     }
     
     this.data ={
-        title : this.data.title.trim(),
-        body : this.data.body.trim(),
+        title: sanitizeHTML(this.data.title.trim(), {allowedTags: [], allowedAttributes: {}}),
+        body: sanitizeHTML(this.data.body.trim(), {allowedTags: [], allowedAttributes: {}}),
         createdDate : new Date(),
-        author: ObjectID(this.userid)
+        author: ObjectId(this.userid)
     }
 }
 
@@ -43,8 +41,8 @@ Post.prototype.create = function(){
         this.cleanUp()
         this.validate()
         if(!this.errors.length){
-            postsCollection.insertOne(this.data).then(()=>{
-                resolve()
+            postsCollection.insertOne(this.data).then((info)=>{
+                resolve(info.ops[0]._id)
             }).catch(()=>{
                 this.errors.push("Please try again")
                 reject(this.errors)
@@ -116,13 +114,13 @@ Post.reuseablePostQuery = function(UniqueOpertions,visitorId) {
 
 Post.findSingleById = function(id,visitorId) {
     return new Promise(async function(resolve, reject) {
-      if (typeof(id) != "string" || !ObjectID.isValid(id)) {
+      if (typeof(id) != "string" || !ObjectId.isValid(id)) {
         reject()
         return
       }
       
       let posts = await Post.reuseablePostQuery([
-          {$match:{_id: new ObjectID(id)}}
+          {$match:{_id: new ObjectId(id)}}
       ],visitorId)
 
       if (posts.length) {
@@ -142,5 +140,21 @@ Post.findByAuthorId = function(authorId){
       }}
     ]
     )
+}
+
+Post.delete = function(postIdToDelete,currentUserId){
+    return new Promise(async (resolve,reject)=>{
+        try{
+            let post = await Post.findSingleById(postIdToDelete,currentUserId)
+            if(post.isVisitorOwner){
+                await postsCollection.deleteOne({_id:new ObjectId(postIdToDelete)})
+                resolve()
+            }else{
+                reject()
+            }   
+        }catch{
+            reject()
+        }
+    })
 }
 module.exports = Post
