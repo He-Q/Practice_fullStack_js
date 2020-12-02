@@ -80,7 +80,7 @@ exports.home = function(req,res){
     res.render('home-dashboard')
     }
     else{
-    res.render('home-guest',{errors:req.flash('errors'),regE:req.flash('regE')})     
+    res.render('home-guest',{regE:req.flash('regE')})     
     }
     
 }

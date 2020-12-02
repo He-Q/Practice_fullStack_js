@@ -18,6 +18,13 @@ app.use(sessionOption)
 app.use(flash())
 
 app.use(function(req,res,next){
+
+    res.locals.errors = req.flash('errors')
+    res.locals.success = req.flash('success')
+
+    if(req.session.user){
+        req.visitorId = req.session.user._id
+    }
     res.locals.user = req.session.user
     next()
 })
