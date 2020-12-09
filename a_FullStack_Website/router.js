@@ -18,8 +18,9 @@ router.get('/post/:id',postController.viewSingle)
 router.get('/post/:id/edit',userController.mustBeLoggedIn,postController.viewEditScreen)
 router.post('/post/:id/edit',userController.mustBeLoggedIn,postController.edit)
 router.post('/post/:id/delete',userController.mustBeLoggedIn,postController.delete)
-// profile releated conrollers
+router.post('/search',postController.search)
 
+// profile releated conrollers
 router.get('/profile/:username',userController.ifUserExists,userController.profilePostsScreen)
 
 module.exports = router
