@@ -65,7 +65,7 @@ export default class Search {
       <div class="list-group-item active"><strong>Search Results</strong> (${posts.length > 1 ? `${posts.length} items found` : '1 items found'})</div>
       ${posts.map((post)=>{
         let postDate = new Date(post.createdDate)
-        return `<a href="post/${post._id}" class="list-group-item list-group-item-action">
+        return `<a href="/post/${post._id}" class="list-group-item list-group-item-action">
           <img class="avatar-tiny" src="${post.author.avatar}"> <strong>${post.title}</strong>
           <span class="text-muted small">by ${post.author.username} on  ${postDate.getMonth() + 1}/${postDate.getDate()}/${postDate.getFullYear()}</span>
           </a>`
