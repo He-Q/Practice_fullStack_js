@@ -40,8 +40,28 @@ app.use(express.json())
 app.set('views','views')
 app.set('view engine','ejs')
 
-
-
 app.use('/',router)
 
-module.exports = app
+const server = require('http').createServer(app)
+
+const io = require('socket.io')(server)
+
+
+io.use((socket,next)=>{
+    sessionOption(socket.request,socket.request.res,next)
+})
+
+io.on('connection',(socket)=>{
+    if(socket.request.session.user){
+        let user = socket.request.session.user
+
+        socket.emit('welcome',{username:user.username,avatar:user.avatar})
+
+        socket.on('chatMessageFromBrowser',(data)=>{
+            socket.broadcast.emit('chatMessageFromServer',{message:data.message,username:user.username,avatar:user.avatar})
+        })
+    }
+})
+
+
+module.exports = server
