@@ -4,8 +4,15 @@ const session = require('express-session')
 const MongoStore = require('connect-mongo')(session)
 const flash = require('connect-flash')
 const app = express()
+app.use(express.urlencoded({extended:false}))
+app.use(express.json())
 const markdown = require('marked')
+const csrf = require('csurf')
 const sanitizeHTML = require('sanitize-html')
+
+app.use('/api',require('./router-api'))
+
+
 
 let sessionOption = session({
     secret:"HOLYMOLLY",
@@ -35,12 +42,31 @@ app.use(function(req,res,next){
 })
 
 app.use(express.static('public'))
-app.use(express.urlencoded({extended:false}))
-app.use(express.json())
+
 app.set('views','views')
 app.set('view engine','ejs')
 
+app.use(csrf())
+
+app.use((req,res,next)=>{
+    res.locals.csrfToken = req.csrfToken()
+    next()
+})
+
 app.use('/',router)
+
+app.use(function(err,req,res,next){
+    if(err){
+        if(err.code == "EBADCSRFTOKEN"){
+            req.flash('errors',"Cross site request forgery detected")
+            req.session.save(()=>{
+                res.redirect('/')
+            })
+        }else{
+            res.render('404')
+        }
+    }
+})
 
 const server = require('http').createServer(app)
 

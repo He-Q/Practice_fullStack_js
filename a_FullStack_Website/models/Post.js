@@ -23,16 +23,16 @@ Post.prototype.cleanUp = function(){
         title: sanitizeHTML(this.data.title.trim(), {allowedTags: [], allowedAttributes: {}}),
         body: sanitizeHTML(this.data.body.trim(), {allowedTags: [], allowedAttributes: {}}),
         createdDate : new Date(),
-        author: ObjectId(this.userid)
+        author: ObjectID(this.userid)
     }
 }
 
 Post.prototype.validate = function(){
     if(this.data.title == ""){
-        this.errors.push("Must required")
+        this.errors.push("Must provide title")
     }
     if(this.data.body == ""){
-        this.errors.push("must required this ")
+        this.errors.push("must provide body content ")
     }
 
 }
@@ -76,7 +76,7 @@ Post.prototype.autuallyUpdate = function(){
         this.cleanUp()
         this.validate()
         if(!this.errors.length){
-            await postsCollection.findOneAndUpdate({_id:new ObjectId(this.requestedPostId)},{$set:{title:this.data.title,body:this.data.body}})
+            await postsCollection.findOneAndUpdate({_id:new ObjectID(this.requestedPostId)},{$set:{title:this.data.title,body:this.data.body}})
             resolve('success')
         }else{
             resolve('faliure')

@@ -1,6 +1,31 @@
 const User = require('../models/User')
 const Post = require('../models/Post')
 const Follow = require('../models/Follow')
+const jwt = require('jsonwebtoken')
+
+exports.apiGetPostsByUsername = async function(req,res){
+    try{
+        let authorDoc = await User.findByUsername(req.params.username)
+        let posts = await Post.findByAuthorId(authorDoc._id)
+        res.json(posts)
+    }catch{
+        res.json("sorry,invalid user requested")
+    }
+}
+
+exports.doesEmailExist  = async function(req,res){
+    let emilBool = await User.doesEmailExist(req.body.email)
+    res.json(emilBool)
+}
+
+exports.doesUsernameExist =  function(req,res){
+    User.findByUsername(req.body.username).then(()=>{
+        res.json(true)
+    }).catch(()=>{
+        res.json(false)
+    })
+}
+
 
 exports.sharedProfileData = async function(req,res,next){
     let isVisitorsProfile = false
@@ -47,6 +72,16 @@ exports.mustBeLoggedIn = function(req,res,next){
     }
 }
 
+
+exports.apiMustBeLoggedIn = function(req,res,next){
+    try{
+        req.apiUser = jwt.verify(req.body.token,process.env.JWTSECRET)
+        next()
+    }catch{
+        res.json("sooory must be provide a valid token")
+    }
+}
+
 exports.login = function(req,res){
     let user = new User(req.body)
     user.login().then((result)=>{
@@ -59,6 +94,17 @@ exports.login = function(req,res){
         req.session.save(function(){
             res.redirect('/')
         })
+    })
+}
+
+exports.apiLogin = function(req,res){
+    let user = new User(req.body)
+    user.login().then((result)=>{
+        res.json(jwt.sign({
+            _id:user.data._id
+        },process.env.JWTSECRET,{expiresIn:'1h'}))
+    }).catch((e)=>{
+        res.json("sorry shit happens")
     })
 }
 
